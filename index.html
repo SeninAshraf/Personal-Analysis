@@ -6,7 +6,6 @@
     <title>Personal Productivity Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #4361ee;
@@ -569,11 +568,32 @@
             font-style: italic;
         }
         
-        /* Chart Container */
-        .chart-container {
-            position: relative;
-            height: 250px;
+        /* Stats Container */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
             margin-top: 20px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
         }
         
         /* Modal Styles */
@@ -636,6 +656,34 @@
             gap: 10px;
         }
         
+        /* Tabs Styles */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
         /* Responsive Styles */
         @media (max-width: 992px) {
             .sidebar {
@@ -674,6 +722,10 @@
                 width: 100%;
                 justify-content: space-between;
             }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
         @media (max-width: 576px) {
@@ -697,6 +749,10 @@
             .expense-summary {
                 flex-direction: column;
                 gap: 10px;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -733,10 +789,6 @@
                     <i class="fas fa-calendar-day"></i>
                     <span>Important Dates</span>
                 </a>
-                <a href="#" class="menu-item" data-section="analytics">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Analytics</span>
-                </a>
             </nav>
         </aside>
         
@@ -765,16 +817,16 @@
                 <section class="dashboard-section active" id="overview-section">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-chart-pie"></i> Weekly Summary</h3>
+                            <h3 class="card-title"><i class="fas fa-calendar-alt"></i> May 2024 Summary</h3>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="weeklyChart"></canvas>
+                        <div class="stats-container" id="may-summary">
+                            <!-- Will be populated by JavaScript -->
                         </div>
                     </div>
                     
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-mosque"></i> Prayer Status</h3>
+                            <h3 class="card-title"><i class="fas fa-mosque"></i> Today's Prayer Status</h3>
                         </div>
                         <div id="prayer-summary">
                             <!-- Will be populated by JavaScript -->
@@ -787,15 +839,6 @@
                         </div>
                         <div id="clean-streak-summary">
                             <!-- Will be populated by JavaScript -->
-                        </div>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-wallet"></i> Monthly Expenses</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="expenseChart"></canvas>
                         </div>
                     </div>
                 </section>
@@ -847,10 +890,10 @@
                     
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-chart-line"></i> Prayer Analytics</h3>
+                            <h3 class="card-title"><i class="fas fa-calendar-alt"></i> May Prayer Stats</h3>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="prayerChart"></canvas>
+                        <div class="stats-container" id="prayer-stats">
+                            <!-- Will be populated by JavaScript -->
                         </div>
                     </div>
                 </section>
@@ -886,10 +929,10 @@
                     
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-chart-line"></i> Clean Days Analytics</h3>
+                            <h3 class="card-title"><i class="fas fa-calendar-alt"></i> May Clean Days</h3>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="cleanChart"></canvas>
+                        <div class="stats-container" id="clean-stats">
+                            <!-- Will be populated by JavaScript -->
                         </div>
                     </div>
                 </section>
@@ -905,9 +948,16 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="tabs">
+                            <div class="tab active" data-tab="all">All</div>
+                            <div class="tab" data-tab="food">Food</div>
+                            <div class="tab" data-tab="transport">Transport</div>
+                            <div class="tab" data-tab="bills">Bills</div>
+                            <div class="tab" data-tab="other">Other</div>
+                        </div>
                         <div class="expense-summary">
                             <div>
-                                <div class="expense-total" id="monthly-expense">$0.00</div>
+                                <div class="expense-total" id="monthly-expense">₹0.00</div>
                                 <div class="expense-period" id="expense-period">This month</div>
                             </div>
                             <button class="btn btn-outline" id="reset-expenses-monthly">
@@ -916,7 +966,7 @@
                         </div>
                         <div class="expense-form">
                             <div class="form-group">
-                                <label class="form-label" for="expense-amount">Amount</label>
+                                <label class="form-label" for="expense-amount">Amount (₹)</label>
                                 <input type="number" class="form-control" id="expense-amount" placeholder="Enter amount">
                             </div>
                             <div class="form-group">
@@ -1043,10 +1093,10 @@
                     
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-chart-line"></i> Workout Analytics</h3>
+                            <h3 class="card-title"><i class="fas fa-calendar-alt"></i> May Workout Stats</h3>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="workoutChart"></canvas>
+                        <div class="stats-container" id="workout-stats">
+                            <!-- Will be populated by JavaScript -->
                         </div>
                     </div>
                 </section>
@@ -1073,36 +1123,6 @@
                         </div>
                         <div id="upcoming-events">
                             <!-- Upcoming events will be added here -->
-                        </div>
-                    </div>
-                </section>
-                
-                <!-- Analytics Section -->
-                <section class="dashboard-section" id="analytics-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-chart-bar"></i> Monthly Prayer Analytics</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="monthlyPrayerChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-chart-pie"></i> Expense Categories</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="expenseCategoryChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-chart-line"></i> Workout Frequency</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="workoutFrequencyChart"></canvas>
                         </div>
                     </div>
                 </section>
@@ -1319,6 +1339,7 @@
             
             updatePrayerStreaks();
             updatePrayerSummary();
+            updateMayPrayerStats();
         }
         
         function savePrayerStatus(prayerName, isChecked) {
@@ -1340,6 +1361,7 @@
             
             localStorage.setItem('prayerHistory', JSON.stringify(prayerHistory));
             updatePrayerSummary();
+            updateMayPrayerStats();
         }
         
         function updatePrayerStreak(prayerName, completed) {
@@ -1380,6 +1402,62 @@
                 <div style="text-align: center; padding: 20px;">
                     <div style="font-size: 2rem; font-weight: 600; color: var(--primary);">${completed}/5</div>
                     <div style="color: var(--gray);">Prayers completed today</div>
+                </div>
+            `;
+        }
+        
+        function updateMayPrayerStats() {
+            const prayerHistory = JSON.parse(localStorage.getItem('prayerHistory'));
+            const currentYear = new Date().getFullYear();
+            const currentMonth = 4; // May is month 4 (0-indexed)
+            
+            // Initialize counts
+            const prayerCounts = {
+                fajr: 0,
+                dhuhr: 0,
+                asr: 0,
+                maghrib: 0,
+                isha: 0,
+                total: 0
+            };
+            
+            // Count prayers for May
+            for (const date in prayerHistory) {
+                const dateObj = new Date(date);
+                if (dateObj.getFullYear() === currentYear && dateObj.getMonth() === currentMonth) {
+                    const prayers = prayerHistory[date];
+                    prayers.forEach(prayer => {
+                        prayerCounts[prayer]++;
+                        prayerCounts.total++;
+                    });
+                }
+            }
+            
+            const statsContainer = document.getElementById('prayer-stats');
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${prayerCounts.fajr}</div>
+                    <div class="stat-label">Fajr</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${prayerCounts.dhuhr}</div>
+                    <div class="stat-label">Dhuhr</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${prayerCounts.asr}</div>
+                    <div class="stat-label">Asr</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${prayerCounts.maghrib}</div>
+                    <div class="stat-label">Maghrib</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${prayerCounts.isha}</div>
+                    <div class="stat-label">Isha</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${prayerCounts.total}</div>
+                    <div class="stat-label">Total</div>
                 </div>
             `;
         }
@@ -1454,6 +1532,7 @@
             
             updateCleanStreak();
             updateCleanSummary();
+            updateMayCleanStats();
         }
         
         function incrementCleanCounter() {
@@ -1473,6 +1552,7 @@
             
             updateCleanStreak();
             updateCleanSummary();
+            updateMayCleanStats();
         }
         
         function resetCleanCounter() {
@@ -1488,6 +1568,7 @@
             
             updateCleanStreak();
             updateCleanSummary();
+            updateMayCleanStats();
         }
         
         function updateCleanStreak() {
@@ -1541,6 +1622,42 @@
             `;
         }
         
+        function updateMayCleanStats() {
+            const cleanHistory = JSON.parse(localStorage.getItem('cleanHistory'));
+            const currentYear = new Date().getFullYear();
+            const currentMonth = 4; // May is month 4 (0-indexed)
+            
+            let totalDays = 0;
+            let cleanDays = 0;
+            
+            // Count clean days for May
+            for (const date in cleanHistory) {
+                const dateObj = new Date(date);
+                if (dateObj.getFullYear() === currentYear && dateObj.getMonth() === currentMonth) {
+                    totalDays++;
+                    if (cleanHistory[date] === 0) {
+                        cleanDays++;
+                    }
+                }
+            }
+            
+            const statsContainer = document.getElementById('clean-stats');
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${cleanDays}</div>
+                    <div class="stat-label">Clean Days</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalDays - cleanDays}</div>
+                    <div class="stat-label">Missed Days</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalDays}</div>
+                    <div class="stat-label">Total Days</div>
+                </div>
+            `;
+        }
+        
         function showCleanHistory() {
             const modalTitle = document.getElementById('history-modal-title');
             const modalContent = document.getElementById('history-modal-content');
@@ -1589,6 +1706,7 @@
             const expenses = JSON.parse(localStorage.getItem('expenses'));
             updateExpenseList(expenses);
             updateExpenseSummary();
+            updateMayExpenseStats();
         }
         
         function addExpense() {
@@ -1621,6 +1739,7 @@
             
             updateExpenseList(expenses);
             updateExpenseSummary();
+            updateMayExpenseStats();
         }
         
         function deleteExpense(index) {
@@ -1629,6 +1748,7 @@
             localStorage.setItem('expenses', JSON.stringify(expenses));
             updateExpenseList(expenses);
             updateExpenseSummary();
+            updateMayExpenseStats();
         }
         
         function resetExpensesMonthly() {
@@ -1637,6 +1757,7 @@
             localStorage.setItem('expenses', JSON.stringify([]));
             updateExpenseList([]);
             updateExpenseSummary();
+            updateMayExpenseStats();
         }
         
         function updateExpenseList(expenses) {
@@ -1663,7 +1784,7 @@
                 
                 expenseItem.innerHTML = `
                     <div class="expense-info">
-                        <div class="expense-amount">$${expense.amount.toFixed(2)}</div>
+                        <div class="expense-amount">₹${expense.amount.toFixed(2)}</div>
                         <div class="expense-category">${expense.category}</div>
                         ${expense.description ? `<div class="expense-description">${expense.description}</div>` : ''}
                     </div>
@@ -1691,8 +1812,51 @@
             
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             
-            document.getElementById('monthly-expense').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('monthly-expense').textContent = `₹${total.toFixed(2)}`;
             document.getElementById('expense-period').textContent = `This month (${monthNames[currentMonth]})`;
+        }
+        
+        function updateMayExpenseStats() {
+            const expenses = JSON.parse(localStorage.getItem('expenses'));
+            const currentYear = new Date().getFullYear();
+            const currentMonth = 4; // May is month 4 (0-indexed)
+            
+            // Filter expenses for May
+            const mayExpenses = expenses.filter(expense => {
+                const expenseDate = new Date(expense.date);
+                return expenseDate.getFullYear() === currentYear && expenseDate.getMonth() === currentMonth;
+            });
+            
+            // Calculate total and category totals
+            const total = mayExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+            const foodTotal = mayExpenses.filter(e => e.category === 'Food').reduce((sum, e) => sum + e.amount, 0);
+            const transportTotal = mayExpenses.filter(e => e.category === 'Transport').reduce((sum, e) => sum + e.amount, 0);
+            const billsTotal = mayExpenses.filter(e => e.category === 'Bills').reduce((sum, e) => sum + e.amount, 0);
+            const otherTotal = mayExpenses.filter(e => !['Food', 'Transport', 'Bills'].includes(e.category)).reduce((sum, e) => sum + e.amount, 0);
+            
+            const statsContainer = document.getElementById('may-summary');
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">₹${total.toFixed(2)}</div>
+                    <div class="stat-label">Total Expenses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹${foodTotal.toFixed(2)}</div>
+                    <div class="stat-label">Food</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹${transportTotal.toFixed(2)}</div>
+                    <div class="stat-label">Transport</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹${billsTotal.toFixed(2)}</div>
+                    <div class="stat-label">Bills</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹${otherTotal.toFixed(2)}</div>
+                    <div class="stat-label">Other</div>
+                </div>
+            `;
         }
         
         function showExpenseHistory() {
@@ -1722,7 +1886,7 @@
                     historyItem.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <div style="font-weight: 500;">$${expense.amount.toFixed(2)} - ${expense.category}</div>
+                                <div style="font-weight: 500;">₹${expense.amount.toFixed(2)} - ${expense.category}</div>
                                 ${expense.description ? `<div style="font-size: 0.9rem; color: var(--gray);">${expense.description}</div>` : ''}
                             </div>
                             <div style="text-align: right;">
@@ -1760,6 +1924,8 @@
                     });
                 }
             }
+            
+            updateMayWorkoutStats();
         }
         
         function recordWorkout(didWorkout) {
@@ -1791,6 +1957,34 @@
             }
             
             localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+            updateMayWorkoutStats();
+        }
+        
+        function updateMayWorkoutStats() {
+            const workoutHistory = JSON.parse(localStorage.getItem('workoutHistory'));
+            const currentYear = new Date().getFullYear();
+            const currentMonth = 4; // May is month 4 (0-indexed)
+            
+            // Filter workouts for May
+            const mayWorkouts = workoutHistory.filter(workout => {
+                const workoutDate = new Date(workout.date);
+                return workoutDate.getFullYear() === currentYear && workoutDate.getMonth() === currentMonth;
+            });
+            
+            const completedWorkouts = mayWorkouts.filter(workout => workout.completed).length;
+            const totalCalories = mayWorkouts.reduce((sum, workout) => sum + (workout.calories || 0), 0);
+            
+            const statsContainer = document.getElementById('workout-stats');
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${completedWorkouts}</div>
+                    <div class="stat-label">Workouts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalCalories}</div>
+                    <div class="stat-label">Calories</div>
+                </div>
+            `;
         }
         
         function editWorkout(day) {
@@ -1968,316 +2162,6 @@
             });
         }
         
-        // Chart Functions
-        function initializeCharts() {
-            // Weekly Summary Chart
-            const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
-            const weeklyChart = new Chart(weeklyCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                    datasets: [
-                        {
-                            label: 'Prayers',
-                            data: [3, 5, 4, 5, 5, 4, 5],
-                            backgroundColor: 'rgba(67, 97, 238, 0.7)',
-                            borderColor: 'rgba(67, 97, 238, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Clean Days',
-                            data: [1, 0, 0, 1, 0, 1, 0],
-                            backgroundColor: 'rgba(76, 201, 240, 0.7)',
-                            borderColor: 'rgba(76, 201, 240, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Workouts',
-                            data: [0, 1, 1, 0, 1, 0, 1],
-                            backgroundColor: 'rgba(243, 114, 44, 0.7)',
-                            borderColor: 'rgba(243, 114, 44, 1)',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 5
-                        }
-                    }
-                }
-            });
-            
-            // Prayer Chart
-            const prayerCtx = document.getElementById('prayerChart').getContext('2d');
-            const prayerChart = new Chart(prayerCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'],
-                    datasets: [{
-                        data: [20, 18, 15, 19, 17],
-                        backgroundColor: [
-                            'rgba(67, 97, 238, 0.7)',
-                            'rgba(76, 201, 240, 0.7)',
-                            'rgba(63, 55, 201, 0.7)',
-                            'rgba(114, 44, 243, 0.7)',
-                            'rgba(243, 114, 44, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(67, 97, 238, 1)',
-                            'rgba(76, 201, 240, 1)',
-                            'rgba(63, 55, 201, 1)',
-                            'rgba(114, 44, 243, 1)',
-                            'rgba(243, 114, 44, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-            
-            // Clean Days Chart
-            const cleanCtx = document.getElementById('cleanChart').getContext('2d');
-            const cleanChart = new Chart(cleanCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Clean Days',
-                        data: [25, 20, 22, 18, 15, 20, 23],
-                        fill: false,
-                        backgroundColor: 'rgba(76, 201, 240, 0.7)',
-                        borderColor: 'rgba(76, 201, 240, 1)',
-                        tension: 0.1,
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            
-            // Expense Chart
-            const expenseCtx = document.getElementById('expenseChart').getContext('2d');
-            const expenseChart = new Chart(expenseCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Monthly Expenses',
-                        data: [450, 380, 420, 500, 480, 550, 600],
-                        backgroundColor: 'rgba(67, 97, 238, 0.7)',
-                        borderColor: 'rgba(67, 97, 238, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            
-            // Workout Chart
-            const workoutCtx = document.getElementById('workoutChart').getContext('2d');
-            const workoutChart = new Chart(workoutCtx, {
-                type: 'radar',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Workout Frequency',
-                        data: [1, 1, 0, 1, 0, 1, 0],
-                        backgroundColor: 'rgba(243, 114, 44, 0.2)',
-                        borderColor: 'rgba(243, 114, 44, 1)',
-                        pointBackgroundColor: 'rgba(243, 114, 44, 1)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(243, 114, 44, 1)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            angleLines: {
-                                display: true
-                            },
-                            suggestedMin: 0,
-                            suggestedMax: 1
-                        }
-                    }
-                }
-            });
-            
-            // Monthly Prayer Chart
-            const monthlyPrayerCtx = document.getElementById('monthlyPrayerChart').getContext('2d');
-            const monthlyPrayerChart = new Chart(monthlyPrayerCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                    datasets: [
-                        {
-                            label: 'Fajr',
-                            data: [25, 20, 22, 18, 15, 20, 23],
-                            borderColor: 'rgba(67, 97, 238, 1)',
-                            backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                            tension: 0.1,
-                            fill: true
-                        },
-                        {
-                            label: 'Dhuhr',
-                            data: [28, 25, 27, 26, 24, 28, 30],
-                            borderColor: 'rgba(76, 201, 240, 1)',
-                            backgroundColor: 'rgba(76, 201, 240, 0.1)',
-                            tension: 0.1,
-                            fill: true
-                        },
-                        {
-                            label: 'Asr',
-                            data: [20, 18, 19, 17, 16, 20, 22],
-                            borderColor: 'rgba(63, 55, 201, 1)',
-                            backgroundColor: 'rgba(63, 55, 201, 0.1)',
-                            tension: 0.1,
-                            fill: true
-                        },
-                        {
-                            label: 'Maghrib',
-                            data: [30, 28, 29, 27, 26, 30, 31],
-                            borderColor: 'rgba(114, 44, 243, 1)',
-                            backgroundColor: 'rgba(114, 44, 243, 0.1)',
-                            tension: 0.1,
-                            fill: true
-                        },
-                        {
-                            label: 'Isha',
-                            data: [27, 25, 26, 24, 23, 27, 28],
-                            borderColor: 'rgba(243, 114, 44, 1)',
-                            backgroundColor: 'rgba(243, 114, 44, 0.1)',
-                            tension: 0.1,
-                            fill: true
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 31
-                        }
-                    }
-                }
-            });
-            
-            // Expense Category Chart
-            const expenseCategoryCtx = document.getElementById('expenseCategoryChart').getContext('2d');
-            const expenseCategoryChart = new Chart(expenseCategoryCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Health', 'Education', 'Other'],
-                    datasets: [{
-                        data: [30, 15, 10, 20, 15, 5, 3, 2],
-                        backgroundColor: [
-                            'rgba(67, 97, 238, 0.7)',
-                            'rgba(76, 201, 240, 0.7)',
-                            'rgba(63, 55, 201, 0.7)',
-                            'rgba(114, 44, 243, 0.7)',
-                            'rgba(243, 114, 44, 0.7)',
-                            'rgba(44, 243, 114, 0.7)',
-                            'rgba(243, 44, 114, 0.7)',
-                            'rgba(114, 243, 44, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(67, 97, 238, 1)',
-                            'rgba(76, 201, 240, 1)',
-                            'rgba(63, 55, 201, 1)',
-                            'rgba(114, 44, 243, 1)',
-                            'rgba(243, 114, 44, 1)',
-                            'rgba(44, 243, 114, 1)',
-                            'rgba(243, 44, 114, 1)',
-                            'rgba(114, 243, 44, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    }
-                }
-            });
-            
-            // Workout Frequency Chart
-            const workoutFrequencyCtx = document.getElementById('workoutFrequencyChart').getContext('2d');
-            const workoutFrequencyChart = new Chart(workoutFrequencyCtx, {
-                type: 'polarArea',
-                data: {
-                    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-                    datasets: [{
-                        data: [12, 10, 2, 8, 6, 9, 4],
-                        backgroundColor: [
-                            'rgba(67, 97, 238, 0.7)',
-                            'rgba(76, 201, 240, 0.7)',
-                            'rgba(63, 55, 201, 0.7)',
-                            'rgba(114, 44, 243, 0.7)',
-                            'rgba(243, 114, 44, 0.7)',
-                            'rgba(44, 243, 114, 0.7)',
-                            'rgba(243, 44, 114, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(67, 97, 238, 1)',
-                            'rgba(76, 201, 240, 1)',
-                            'rgba(63, 55, 201, 1)',
-                            'rgba(114, 44, 243, 1)',
-                            'rgba(243, 114, 44, 1)',
-                            'rgba(44, 243, 114, 1)',
-                            'rgba(243, 44, 114, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            pointLabels: {
-                                display: true
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
         // Navigation Functions
         function setupNavigation() {
             const menuItems = document.querySelectorAll('.menu-item');
@@ -2322,6 +2206,20 @@
                     }
                 });
             });
+            
+            // Tab navigation
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Here you would filter expenses by category
+                    // For now, just show all expenses
+                    const expenses = JSON.parse(localStorage.getItem('expenses'));
+                    updateExpenseList(expenses);
+                });
+            });
         }
         
         // Initialize application
@@ -2338,9 +2236,6 @@
             loadExpenses();
             loadWorkoutRoutines();
             loadImportantDates();
-            
-            // Initialize charts
-            initializeCharts();
             
             // Setup navigation
             setupNavigation();
