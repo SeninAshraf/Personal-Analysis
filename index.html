@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Productivity Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --danger: #ef233c;
+            --dark: #2b2d42;
+            --light: #f8f9fa;
+            --gray: #adb5bd;
+            --dark-gray: #495057;
+            --sidebar-width: 250px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+        }
+        
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            color: var(--dark-gray);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .menu-item:hover, .menu-item.active {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .menu-item i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        
+        .header-title h1 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin: 0;
+        }
+        
+        .header-title p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin: 5px 0 0;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: 600;
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--dark);
+            cursor: pointer;
+            margin-right: 15px;
+        }
+        
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        /* Card Styles */
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .card-btn {
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        .card-btn:hover {
+            color: var(--primary);
+        }
+        
+        /* Prayer Tracker Styles */
+        .prayer-tracker {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .prayer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: rgba(67, 97, 238, 0.05);
+            transition: all 0.3s;
+        }
+        
+        .prayer:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        
+        .prayer-name {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        
+        .prayer-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+        
+        .prayer-checkbox {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .prayer-checkbox:checked {
+            background-color: var(--primary);
+        }
+        
+        .prayer-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 14px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .prayer-streak {
+            font-size: 0.8rem;
+            color: var(--success);
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        
+        /* Clean Counter Styles */
+        .clean-counter {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .counter-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        
+        .counter-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .streak-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .streak-count {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--success);
+            margin-right: 10px;
+        }
+        
+        .streak-label {
+            color: var(--gray);
+        }
+        
+        .counter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        
+        /* Expense Tracker Styles */
+        .expense-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(67, 97, 238, 0.05);
+            border-radius: 8px;
+        }
+        
+        .expense-total {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .expense-period {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .expense-form {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            transition: border 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .expense-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+        
+        .expense-info {
+            flex: 1;
+        }
+        
+        .expense-amount {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .expense-category {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 3px;
+        }
+        
+        .expense-description {
+            font-size: 0.9rem;
+            color: var(--dark-gray);
+            margin-top: 3px;
+        }
+        
+        .expense-date {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        .expense-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        .action-btn:hover {
+            color: var(--primary);
+        }
+        
+        .delete-btn:hover {
+            color: var(--danger);
+        }
+        
+        /* Workout Tracker Styles */
+        .workout-check {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(76, 201, 240, 0.1);
+            border-radius: 8px;
+        }
+        
+        .workout-question {
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .workout-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .workout-day {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .workout-day:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .day-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        .exercises {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .exercise {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        /* Important Dates Styles */
+        .date-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .date-item:last-child {
+            border-bottom: none;
+        }
+        
+        .date-info {
+            flex: 1;
+        }
+        
+        .date-label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .date-value {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 3px;
+        }
+        
+        .days-ago {
+            font-size: 0.8rem;
+            color: var(--gray);
+            font-style: italic;
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-top: 20px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .modal-title {
+            margin: 0;
+            font-size: 1.3rem;
+            color: var(--dark);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: var(--danger);
+        }
+        
+        .modal-footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .prayer-tracker {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .prayer:nth-child(4), .prayer:nth-child(5) {
+                grid-column: span 1.5;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header-actions {
+                margin-top: 15px;
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .prayer-tracker {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .prayer:nth-child(odd) {
+                grid-column: span 1;
+            }
+            
+            .counter-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .expense-summary {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Productivity Dashboard</h2>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-section="overview">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="#" class="menu-item" data-section="prayer">
+                    <i class="fas fa-mosque"></i>
+                    <span>Prayer Tracker</span>
+                </a>
+                <a href="#" class="menu-item" data-section="clean">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Clean Days</span>
+                </a>
+                <a href="#" class="menu-item" data-section="expense">
+                    <i class="fas fa-wallet"></i>
+                    <span>Expense Tracker</span>
+                </a>
+                <a href="#" class="menu-item" data-section="workout">
+                    <i class="fas fa-dumbbell"></i>
+                    <span>Workout Tracker</span>
+                </a>
+                <a href="#" class="menu-item" data-section="dates">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Important Dates</span>
+                </a>
+                <a href="#" class="menu-item" data-section="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">
+                    <h1 id="page-title">Dashboard Overview</h1>
+                    <p id="current-date">Loading date...</p>
+                </div>
+                <div class="header-actions">
+                    <button class="mobile-menu-btn" id="mobile-menu-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="user-avatar">U</div>
+                        <div class="user-name">User</div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Dashboard Sections -->
+            <div class="dashboard">
+                <!-- Overview Section (Default) -->
+                <section class="dashboard-section active" id="overview-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-pie"></i> Weekly Summary</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="weeklyChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-mosque"></i> Prayer Status</h3>
+                        </div>
+                        <div id="prayer-summary">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-calendar-check"></i> Clean Streak</h3>
+                        </div>
+                        <div id="clean-streak-summary">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-wallet"></i> Monthly Expenses</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Prayer Tracker Section -->
+                <section class="dashboard-section" id="prayer-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-mosque"></i> Prayer Tracker</h3>
+                            <div class="card-actions">
+                                <button class="card-btn" id="view-prayer-history" title="View History">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="prayer-tracker">
+                            <div class="prayer">
+                                <div class="prayer-name">Fajr</div>
+                                <div class="prayer-time">05:30 AM</div>
+                                <input type="checkbox" class="prayer-checkbox" id="prayer-fajr">
+                                <div class="prayer-streak" id="fajr-streak">0 day streak</div>
+                            </div>
+                            <div class="prayer">
+                                <div class="prayer-name">Dhuhr</div>
+                                <div class="prayer-time">01:30 PM</div>
+                                <input type="checkbox" class="prayer-checkbox" id="prayer-dhuhr">
+                                <div class="prayer-streak" id="dhuhr-streak">0 day streak</div>
+                            </div>
+                            <div class="prayer">
+                                <div class="prayer-name">Asr</div>
+                                <div class="prayer-time">04:45 PM</div>
+                                <input type="checkbox" class="prayer-checkbox" id="prayer-asr">
+                                <div class="prayer-streak" id="asr-streak">0 day streak</div>
+                            </div>
+                            <div class="prayer">
+                                <div class="prayer-name">Maghrib</div>
+                                <div class="prayer-time">06:30 PM</div>
+                                <input type="checkbox" class="prayer-checkbox" id="prayer-maghrib">
+                                <div class="prayer-streak" id="maghrib-streak">0 day streak</div>
+                            </div>
+                            <div class="prayer">
+                                <div class="prayer-name">Isha</div>
+                                <div class="prayer-time">08:15 PM</div>
+                                <input type="checkbox" class="prayer-checkbox" id="prayer-isha">
+                                <div class="prayer-streak" id="isha-streak">0 day streak</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-line"></i> Prayer Analytics</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="prayerChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Clean Days Section -->
+                <section class="dashboard-section" id="clean-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-calendar-check"></i> Clean Days Counter</h3>
+                            <div class="card-actions">
+                                <button class="card-btn" id="view-clean-history" title="View History">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="clean-counter">
+                            <div class="counter-label">Today's Count</div>
+                            <div class="counter-value" id="clean-counter">0</div>
+                            <div class="streak-display">
+                                <div class="streak-count" id="clean-streak">0</div>
+                                <div class="streak-label">day streak</div>
+                            </div>
+                        </div>
+                        <div class="counter-buttons">
+                            <button class="btn btn-primary" id="increment-clean">
+                                <i class="fas fa-plus"></i> Increment
+                            </button>
+                            <button class="btn btn-outline" id="reset-clean">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-line"></i> Clean Days Analytics</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="cleanChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Expense Tracker Section -->
+                <section class="dashboard-section" id="expense-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-wallet"></i> Expense Tracker</h3>
+                            <div class="card-actions">
+                                <button class="card-btn" id="view-expense-history" title="View History">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="expense-summary">
+                            <div>
+                                <div class="expense-total" id="monthly-expense">$0.00</div>
+                                <div class="expense-period" id="expense-period">This month</div>
+                            </div>
+                            <button class="btn btn-outline" id="reset-expenses-monthly">
+                                <i class="fas fa-sync-alt"></i> Reset Monthly
+                            </button>
+                        </div>
+                        <div class="expense-form">
+                            <div class="form-group">
+                                <label class="form-label" for="expense-amount">Amount</label>
+                                <input type="number" class="form-control" id="expense-amount" placeholder="Enter amount">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="expense-category">Category</label>
+                                <select class="form-control" id="expense-category">
+                                    <option value="Food">Food</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Bills">Bills</option>
+                                    <option value="Health">Health</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="expense-description">Description (Optional)</label>
+                                <input type="text" class="form-control" id="expense-description" placeholder="Enter description">
+                            </div>
+                            <button class="btn btn-primary" id="add-expense">
+                                <i class="fas fa-plus"></i> Add Expense
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-list"></i> Recent Expenses</h3>
+                        </div>
+                        <div class="expense-list" id="expense-list">
+                            <!-- Expense items will be added here -->
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Workout Tracker Section -->
+                <section class="dashboard-section" id="workout-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-dumbbell"></i> Today's Workout</h3>
+                        </div>
+                        <div class="workout-check">
+                            <div class="workout-question">Did you workout today?</div>
+                            <div class="workout-buttons">
+                                <button class="btn btn-primary" id="workout-yes">
+                                    <i class="fas fa-check"></i> Yes
+                                </button>
+                                <button class="btn btn-outline" id="workout-no">
+                                    <i class="fas fa-times"></i> No
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="calories-burned">Calories Burned (Optional)</label>
+                            <input type="number" class="form-control" id="calories-burned" placeholder="Enter calories burned">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-calendar-alt"></i> Weekly Workout Plan</h3>
+                        </div>
+                        <div class="workout-day">
+                            <div class="day-name">Monday</div>
+                            <div class="exercises" id="monday-exercises">
+                                <div class="exercise">Push-ups (3×15)</div>
+                                <div class="exercise">Squats (3×20)</div>
+                                <div class="exercise">Plank (3×60s)</div>
+                            </div>
+                            <button class="btn btn-outline" style="margin-top: 10px;" onclick="editWorkout('monday')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        <div class="workout-day">
+                            <div class="day-name">Tuesday</div>
+                            <div class="exercises" id="tuesday-exercises">
+                                <div class="exercise">Running (30min)</div>
+                                <div class="exercise">Pull-ups (3×8)</div>
+                            </div>
+                            <button class="btn btn-outline" style="margin-top: 10px;" onclick="editWorkout('tuesday')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        <div class="workout-day">
+                            <div class="day-name">Wednesday</div>
+                            <div class="exercises" id="wednesday-exercises">
+                                <div class="exercise">Rest Day</div>
+                            </div>
+                            <button class="btn btn-outline" style="margin-top: 10px;" onclick="editWorkout('wednesday')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        <div class="workout-day">
+                            <div class="day-name">Thursday</div>
+                            <div class="exercises" id="thursday-exercises">
+                                <div class="exercise">Dumbbell Press (3×12)</div>
+                                <div class="exercise">Lunges (3×15)</div>
+                                <div class="exercise">Crunches (3×20)</div>
+                            </div>
+                            <button class="btn btn-outline" style="margin-top: 10px;" onclick="editWorkout('thursday')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        <div class="workout-day">
+                            <div class="day-name">Friday</div>
+                            <div class="exercises" id="friday-exercises">
+                                <div class="exercise">Swimming (45min)</div>
+                            </div>
+                            <button class="btn btn-outline" style="margin-top: 10px;" onclick="editWorkout('friday')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                        <div class="workout-day">
+                            <div class="day-name">Weekend</div>
+                            <div class="exercises" id="weekend-exercises">
+                                <div class="exercise">Outdoor Activity</div>
+                                <div class="exercise">Flexibility Training</div>
+                            </div>
+                            <button class="btn btn-outline" style="margin-top: 10px;" onclick="editWorkout('weekend')">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-line"></i> Workout Analytics</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="workoutChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Important Dates Section -->
+                <section class="dashboard-section" id="dates-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-calendar-day"></i> Important Dates</h3>
+                            <div class="card-actions">
+                                <button class="card-btn" id="add-date-btn" title="Add Date">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <ul class="important-dates" id="important-dates-list">
+                            <!-- Important dates will be added here -->
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-bell"></i> Upcoming Events</h3>
+                        </div>
+                        <div id="upcoming-events">
+                            <!-- Upcoming events will be added here -->
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Analytics Section -->
+                <section class="dashboard-section" id="analytics-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-bar"></i> Monthly Prayer Analytics</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="monthlyPrayerChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-pie"></i> Expense Categories</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="expenseCategoryChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-chart-line"></i> Workout Frequency</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="workoutFrequencyChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal" id="workout-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Workout</h3>
+                <button class="close-modal" id="close-workout-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="workout-day-input">Day</label>
+                <input type="text" class="form-control" id="workout-day-input" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="workout-exercises">Exercises (one per line)</label>
+                <textarea class="form-control" id="workout-exercises" rows="5"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-workout">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary" id="save-workout">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="date-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Important Date</h3>
+                <button class="close-modal" id="close-date-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="date-label-input">Label</label>
+                <input type="text" class="form-control" id="date-label-input" placeholder="e.g., Haircut">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="date-value-input">Date</label>
+                <input type="date" class="form-control" id="date-value-input">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-date">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary" id="save-date">
+                    <i class="fas fa-save"></i> Save Date
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="history-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="history-modal-title">History</h3>
+                <button class="close-modal" id="close-history-modal">&times;</button>
+            </div>
+            <div id="history-modal-content">
+                <!-- History content will be added here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="close-history">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize data storage
+        function initializeStorage() {
+            if (!localStorage.getItem('prayerHistory')) {
+                localStorage.setItem('prayerHistory', JSON.stringify({}));
+            }
+            
+            if (!localStorage.getItem('cleanHistory')) {
+                localStorage.setItem('cleanHistory', JSON.stringify({}));
+            }
+            
+            if (!localStorage.getItem('expenses')) {
+                localStorage.setItem('expenses', JSON.stringify([]));
+            }
+            
+            if (!localStorage.getItem('expenseMonth')) {
+                const currentMonth = new Date().getMonth();
+                localStorage.setItem('expenseMonth', currentMonth.toString());
+            }
+            
+            if (!localStorage.getItem('workouts')) {
+                const defaultWorkouts = {
+                    monday: ['Push-ups (3×15)', 'Squats (3×20)', 'Plank (3×60s)'],
+                    tuesday: ['Running (30min)', 'Pull-ups (3×8)'],
+                    wednesday: ['Rest Day'],
+                    thursday: ['Dumbbell Press (3×12)', 'Lunges (3×15)', 'Crunches (3×20)'],
+                    friday: ['Swimming (45min)'],
+                    weekend: ['Outdoor Activity', 'Flexibility Training']
+                };
+                localStorage.setItem('workouts', JSON.stringify(defaultWorkouts));
+            }
+            
+            if (!localStorage.getItem('workoutHistory')) {
+                localStorage.setItem('workoutHistory', JSON.stringify([]));
+            }
+            
+            if (!localStorage.getItem('importantDates')) {
+                const today = new Date();
+                const defaultDates = [
+                    {
+                        label: 'Last Haircut',
+                        date: new Date(today.getFullYear(), today.getMonth() - 1, 15).toISOString().split('T')[0]
+                    }
+                ];
+                localStorage.setItem('importantDates', JSON.stringify(defaultDates));
+            }
+            
+            if (!localStorage.getItem('prayerStreaks')) {
+                localStorage.setItem('prayerStreaks', JSON.stringify({
+                    fajr: 0,
+                    dhuhr: 0,
+                    asr: 0,
+                    maghrib: 0,
+                    isha: 0
+                }));
+            }
+            
+            if (!localStorage.getItem('cleanStreak')) {
+                localStorage.setItem('cleanStreak', '0');
+            }
+        }
+        
+        // Format date for display
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+        
+        // Get today's date string in YYYY-MM-DD format
+        function getTodayString() {
+            const today = new Date();
+            return today.toISOString().split('T')[0];
+        }
+        
+        // Get current month (0-11)
+        function getCurrentMonth() {
+            return new Date().getMonth();
+        }
+        
+        // Calculate days ago
+        function daysAgo(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const diffTime = Math.abs(today - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                return 'Today';
+            } else if (diffDays === 1) {
+                return '1 day ago';
+            } else {
+                return `${diffDays} days ago`;
+            }
+        }
+        
+        // Calculate days until
+        function daysUntil(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffTime = Math.abs(date - today);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                return 'Today';
+            } else if (diffDays === 1) {
+                return 'Tomorrow';
+            } else {
+                return `In ${diffDays} days`;
+            }
+        }
+        
+        // Update current date display
+        function updateDateDisplay() {
+            const dateElement = document.getElementById('current-date');
+            const today = new Date();
+            dateElement.textContent = formatDate(today);
+        }
+        
+        // Prayer Tracker Functions
+        function loadPrayerStatus() {
+            const prayerHistory = JSON.parse(localStorage.getItem('prayerHistory'));
+            const today = getTodayString();
+            
+            if (prayerHistory[today]) {
+                const prayers = prayerHistory[today];
+                document.getElementById('prayer-fajr').checked = prayers.includes('fajr');
+                document.getElementById('prayer-dhuhr').checked = prayers.includes('dhuhr');
+                document.getElementById('prayer-asr').checked = prayers.includes('asr');
+                document.getElementById('prayer-maghrib').checked = prayers.includes('maghrib');
+                document.getElementById('prayer-isha').checked = prayers.includes('isha');
+            } else {
+                document.getElementById('prayer-fajr').checked = false;
+                document.getElementById('prayer-dhuhr').checked = false;
+                document.getElementById('prayer-asr').checked = false;
+                document.getElementById('prayer-maghrib').checked = false;
+                document.getElementById('prayer-isha').checked = false;
+            }
+            
+            updatePrayerStreaks();
+            updatePrayerSummary();
+        }
+        
+        function savePrayerStatus(prayerName, isChecked) {
+            const prayerHistory = JSON.parse(localStorage.getItem('prayerHistory'));
+            const today = getTodayString();
+            
+            if (!prayerHistory[today]) {
+                prayerHistory[today] = [];
+            }
+            
+            const index = prayerHistory[today].indexOf(prayerName);
+            if (isChecked && index === -1) {
+                prayerHistory[today].push(prayerName);
+                updatePrayerStreak(prayerName, true);
+            } else if (!isChecked && index !== -1) {
+                prayerHistory[today].splice(index, 1);
+                updatePrayerStreak(prayerName, false);
+            }
+            
+            localStorage.setItem('prayerHistory', JSON.stringify(prayerHistory));
+            updatePrayerSummary();
+        }
+        
+        function updatePrayerStreak(prayerName, completed) {
+            const streaks = JSON.parse(localStorage.getItem('prayerStreaks'));
+            
+            if (completed) {
+                streaks[prayerName]++;
+            } else {
+                streaks[prayerName] = 0;
+            }
+            
+            localStorage.setItem('prayerStreaks', JSON.stringify(streaks));
+            updatePrayerStreaks();
+        }
+        
+        function updatePrayerStreaks() {
+            const streaks = JSON.parse(localStorage.getItem('prayerStreaks'));
+            
+            for (const prayer in streaks) {
+                const streakElement = document.getElementById(`${prayer}-streak`);
+                if (streakElement) {
+                    streakElement.textContent = `${streaks[prayer]} day streak`;
+                }
+            }
+        }
+        
+        function updatePrayerSummary() {
+            const summaryElement = document.getElementById('prayer-summary');
+            const prayerHistory = JSON.parse(localStorage.getItem('prayerHistory'));
+            const today = getTodayString();
+            
+            let completed = 0;
+            if (prayerHistory[today]) {
+                completed = prayerHistory[today].length;
+            }
+            
+            summaryElement.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2rem; font-weight: 600; color: var(--primary);">${completed}/5</div>
+                    <div style="color: var(--gray);">Prayers completed today</div>
+                </div>
+            `;
+        }
+        
+        function showPrayerHistory() {
+            const modalTitle = document.getElementById('history-modal-title');
+            const modalContent = document.getElementById('history-modal-content');
+            
+            modalTitle.textContent = 'Prayer History';
+            
+            const prayerHistory = JSON.parse(localStorage.getItem('prayerHistory'));
+            const dates = Object.keys(prayerHistory).sort().reverse().slice(0, 30); // Get last 30 days
+            
+            let historyHTML = '<div style="max-height: 400px; overflow-y: auto;">';
+            
+            if (dates.length === 0) {
+                historyHTML += '<p style="text-align: center; color: var(--gray);">No prayer history available</p>';
+            } else {
+                const prayerNames = {
+                    'fajr': 'Fajr',
+                    'dhuhr': 'Dhuhr',
+                    'asr': 'Asr',
+                    'maghrib': 'Maghrib',
+                    'isha': 'Isha'
+                };
+                
+                dates.forEach(date => {
+                    const prayers = prayerHistory[date];
+                    const displayDate = new Date(date);
+                    const formattedDate = displayDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    
+                    const historyItem = document.createElement('div');
+                    historyItem.style.padding = '12px 0';
+                    historyItem.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
+                    
+                    let prayerText = '';
+                    if (prayers.length === 0) {
+                        prayerText = 'No prayers recorded';
+                    } else if (prayers.length === 5) {
+                        prayerText = 'All prayers completed';
+                    } else {
+                        prayerText = prayers.map(p => prayerNames[p]).join(', ');
+                    }
+                    
+                    historyItem.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 500;">${formattedDate}</div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">${prayerText}</div>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">${daysAgo(date)}</div>
+                        </div>
+                    `;
+                    
+                    historyHTML += historyItem.outerHTML;
+                });
+            }
+            
+            historyHTML += '</div>';
+            modalContent.innerHTML = historyHTML;
+            
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+        
+        // Clean Days Counter Functions
+        function loadCleanCounter() {
+            const cleanHistory = JSON.parse(localStorage.getItem('cleanHistory'));
+            const today = getTodayString();
+            
+            const counter = document.getElementById('clean-counter');
+            counter.textContent = cleanHistory[today] || 0;
+            
+            updateCleanStreak();
+            updateCleanSummary();
+        }
+        
+        function incrementCleanCounter() {
+            const cleanHistory = JSON.parse(localStorage.getItem('cleanHistory'));
+            const today = getTodayString();
+            
+            if (!cleanHistory[today]) {
+                cleanHistory[today] = 0;
+            }
+            
+            cleanHistory[today]++;
+            
+            localStorage.setItem('cleanHistory', JSON.stringify(cleanHistory));
+            
+            const counter = document.getElementById('clean-counter');
+            counter.textContent = cleanHistory[today];
+            
+            updateCleanStreak();
+            updateCleanSummary();
+        }
+        
+        function resetCleanCounter() {
+            const cleanHistory = JSON.parse(localStorage.getItem('cleanHistory'));
+            const today = getTodayString();
+            
+            cleanHistory[today] = 0;
+            
+            localStorage.setItem('cleanHistory', JSON.stringify(cleanHistory));
+            
+            const counter = document.getElementById('clean-counter');
+            counter.textContent = '0';
+            
+            updateCleanStreak();
+            updateCleanSummary();
+        }
+        
+        function updateCleanStreak() {
+            const cleanHistory = JSON.parse(localStorage.getItem('cleanHistory'));
+            const dates = Object.keys(cleanHistory).sort().reverse();
+            
+            let streak = 0;
+            const today = new Date();
+            let currentDate = new Date(today);
+            
+            // Check for consecutive days with 0 count
+            for (let i = 0; i < dates.length; i++) {
+                const dateStr = dates[i];
+                const date = new Date(dateStr);
+                
+                // Check if date is yesterday (for consecutive days)
+                const expectedDate = new Date(currentDate);
+                expectedDate.setDate(currentDate.getDate() - 1);
+                
+                if (date.toDateString() === expectedDate.toDateString()) {
+                    if (cleanHistory[dateStr] === 0) {
+                        streak++;
+                        currentDate = date;
+                    } else {
+                        break;
+                    }
+                } else if (i === 0 && date.toDateString() === today.toDateString() && cleanHistory[dateStr] === 0) {
+                    // Today is the first day of the streak
+                    streak = 1;
+                    currentDate = date;
+                } else {
+                    break;
+                }
+            }
+            
+            localStorage.setItem('cleanStreak', streak.toString());
+            
+            const streakElement = document.getElementById('clean-streak');
+            streakElement.textContent = streak;
+        }
+        
+        function updateCleanSummary() {
+            const summaryElement = document.getElementById('clean-streak-summary');
+            const streak = localStorage.getItem('cleanStreak') || '0';
+            
+            summaryElement.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2rem; font-weight: 600; color: var(--primary);">${streak}</div>
+                    <div style="color: var(--gray);">Day clean streak</div>
+                </div>
+            `;
+        }
+        
+        function showCleanHistory() {
+            const modalTitle = document.getElementById('history-modal-title');
+            const modalContent = document.getElementById('history-modal-content');
+            
+            modalTitle.textContent = 'Clean Days History';
+            
+            const cleanHistory = JSON.parse(localStorage.getItem('cleanHistory'));
+            const dates = Object.keys(cleanHistory).sort().reverse().slice(0, 30); // Get last 30 days
+            
+            let historyHTML = '<div style="max-height: 400px; overflow-y: auto;">';
+            
+            if (dates.length === 0) {
+                historyHTML += '<p style="text-align: center; color: var(--gray);">No history available</p>';
+            } else {
+                dates.forEach(date => {
+                    const count = cleanHistory[date];
+                    const displayDate = new Date(date);
+                    const formattedDate = displayDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    
+                    const historyItem = document.createElement('div');
+                    historyItem.style.padding = '12px 0';
+                    historyItem.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
+                    
+                    historyItem.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 500;">${formattedDate}</div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">Count: ${count}</div>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">${daysAgo(date)}</div>
+                        </div>
+                    `;
+                    
+                    historyHTML += historyItem.outerHTML;
+                });
+            }
+            
+            historyHTML += '</div>';
+            modalContent.innerHTML = historyHTML;
+            
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+        
+        // Expense Tracker Functions
+        function loadExpenses() {
+            const expenses = JSON.parse(localStorage.getItem('expenses'));
+            updateExpenseList(expenses);
+            updateExpenseSummary();
+        }
+        
+        function addExpense() {
+            const amountInput = document.getElementById('expense-amount');
+            const categorySelect = document.getElementById('expense-category');
+            const descriptionInput = document.getElementById('expense-description');
+            
+            const amount = parseFloat(amountInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            const category = categorySelect.value;
+            const description = descriptionInput.value;
+            const date = new Date().toISOString();
+            
+            const expenses = JSON.parse(localStorage.getItem('expenses'));
+            expenses.push({
+                amount,
+                category,
+                description,
+                date
+            });
+            
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            
+            amountInput.value = '';
+            descriptionInput.value = '';
+            
+            updateExpenseList(expenses);
+            updateExpenseSummary();
+        }
+        
+        function deleteExpense(index) {
+            const expenses = JSON.parse(localStorage.getItem('expenses'));
+            expenses.splice(index, 1);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            updateExpenseList(expenses);
+            updateExpenseSummary();
+        }
+        
+        function resetExpensesMonthly() {
+            const currentMonth = new Date().getMonth();
+            localStorage.setItem('expenseMonth', currentMonth.toString());
+            localStorage.setItem('expenses', JSON.stringify([]));
+            updateExpenseList([]);
+            updateExpenseSummary();
+        }
+        
+        function updateExpenseList(expenses) {
+            const expenseList = document.getElementById('expense-list');
+            expenseList.innerHTML = '';
+            
+            // Sort expenses by date (newest first)
+            expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Show only the 10 most recent expenses
+            const recentExpenses = expenses.slice(0, 10);
+            
+            if (recentExpenses.length === 0) {
+                expenseList.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">No expenses recorded yet</p>';
+                return;
+            }
+            
+            recentExpenses.forEach((expense, index) => {
+                const expenseDate = new Date(expense.date);
+                const formattedDate = expenseDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                const expenseItem = document.createElement('div');
+                expenseItem.className = 'expense-item';
+                
+                expenseItem.innerHTML = `
+                    <div class="expense-info">
+                        <div class="expense-amount">$${expense.amount.toFixed(2)}</div>
+                        <div class="expense-category">${expense.category}</div>
+                        ${expense.description ? `<div class="expense-description">${expense.description}</div>` : ''}
+                    </div>
+                    <div class="expense-actions">
+                        <div class="expense-date">${formattedDate}</div>
+                        <button class="action-btn delete-btn" onclick="deleteExpense(${index})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                expenseList.appendChild(expenseItem);
+            });
+        }
+        
+        function updateExpenseSummary() {
+            const expenses = JSON.parse(localStorage.getItem('expenses'));
+            const expenseMonth = parseInt(localStorage.getItem('expenseMonth'));
+            const currentMonth = new Date().getMonth();
+            
+            let total = 0;
+            if (expenseMonth === currentMonth) {
+                total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            }
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('monthly-expense').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('expense-period').textContent = `This month (${monthNames[currentMonth]})`;
+        }
+        
+        function showExpenseHistory() {
+            const modalTitle = document.getElementById('history-modal-title');
+            const modalContent = document.getElementById('history-modal-content');
+            
+            modalTitle.textContent = 'Expense History';
+            
+            const expenses = JSON.parse(localStorage.getItem('expenses'));
+            
+            let historyHTML = '<div style="max-height: 400px; overflow-y: auto;">';
+            
+            if (expenses.length === 0) {
+                historyHTML += '<p style="text-align: center; color: var(--gray);">No expense history available</p>';
+            } else {
+                // Sort expenses by date (newest first)
+                expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                expenses.forEach((expense, index) => {
+                    const expenseDate = new Date(expense.date);
+                    const formattedDate = expenseDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    
+                    const historyItem = document.createElement('div');
+                    historyItem.style.padding = '12px 0';
+                    historyItem.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
+                    
+                    historyItem.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 500;">$${expense.amount.toFixed(2)} - ${expense.category}</div>
+                                ${expense.description ? `<div style="font-size: 0.9rem; color: var(--gray);">${expense.description}</div>` : ''}
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9rem;">${formattedDate}</div>
+                                <div style="font-size: 0.8rem; color: var(--gray);">${daysAgo(expense.date)}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    historyHTML += historyItem.outerHTML;
+                });
+            }
+            
+            historyHTML += '</div>';
+            modalContent.innerHTML = historyHTML;
+            
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+        
+        // Workout Tracker Functions
+        function loadWorkoutRoutines() {
+            const workouts = JSON.parse(localStorage.getItem('workouts'));
+            
+            for (const day in workouts) {
+                const exercises = workouts[day];
+                const dayElement = document.getElementById(`${day}-exercises`);
+                
+                if (dayElement) {
+                    dayElement.innerHTML = '';
+                    exercises.forEach(exercise => {
+                        const exerciseDiv = document.createElement('div');
+                        exerciseDiv.className = 'exercise';
+                        exerciseDiv.textContent = exercise;
+                        dayElement.appendChild(exerciseDiv);
+                    });
+                }
+            }
+        }
+        
+        function recordWorkout(didWorkout) {
+            const workoutHistory = JSON.parse(localStorage.getItem('workoutHistory'));
+            const today = getTodayString();
+            const calories = document.getElementById('calories-burned').value;
+            
+            // Find today's workout if it exists
+            const todayWorkoutIndex = workoutHistory.findIndex(workout => workout.date === today);
+            
+            if (didWorkout) {
+                const workoutData = {
+                    date: today,
+                    completed: true,
+                    calories: calories ? parseInt(calories) : null
+                };
+                
+                if (todayWorkoutIndex !== -1) {
+                    workoutHistory[todayWorkoutIndex] = workoutData;
+                } else {
+                    workoutHistory.push(workoutData);
+                }
+                
+                document.getElementById('calories-burned').value = '';
+            } else {
+                if (todayWorkoutIndex !== -1) {
+                    workoutHistory.splice(todayWorkoutIndex, 1);
+                }
+            }
+            
+            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+        }
+        
+        function editWorkout(day) {
+            const modal = document.getElementById('workout-modal');
+            const dayInput = document.getElementById('workout-day-input');
+            const exercisesInput = document.getElementById('workout-exercises');
+            
+            const workouts = JSON.parse(localStorage.getItem('workouts'));
+            const exercises = workouts[day];
+            
+            // Capitalize first letter of day
+            const dayName = day.charAt(0).toUpperCase() + day.slice(1);
+            
+            dayInput.value = dayName;
+            exercisesInput.value = exercises.join('\n');
+            
+            modal.style.display = 'flex';
+        }
+        
+        function saveWorkout() {
+            const dayInput = document.getElementById('workout-day-input');
+            const exercisesInput = document.getElementById('workout-exercises');
+            
+            const day = dayInput.value.toLowerCase();
+            const exercises = exercisesInput.value.split('\n').filter(exercise => exercise.trim() !== '');
+            
+            const workouts = JSON.parse(localStorage.getItem('workouts'));
+            workouts[day] = exercises;
+            
+            localStorage.setItem('workouts', JSON.stringify(workouts));
+            
+            const dayElement = document.getElementById(`${day}-exercises`);
+            if (dayElement) {
+                dayElement.innerHTML = '';
+                exercises.forEach(exercise => {
+                    const exerciseDiv = document.createElement('div');
+                    exerciseDiv.className = 'exercise';
+                    exerciseDiv.textContent = exercise;
+                    dayElement.appendChild(exerciseDiv);
+                });
+            }
+            
+            closeWorkoutModal();
+        }
+        
+        function closeWorkoutModal() {
+            const modal = document.getElementById('workout-modal');
+            modal.style.display = 'none';
+        }
+        
+        // Important Dates Functions
+        function loadImportantDates() {
+            const importantDates = JSON.parse(localStorage.getItem('importantDates'));
+            updateImportantDatesList(importantDates);
+            updateUpcomingEvents(importantDates);
+        }
+        
+        function showAddDateModal() {
+            const modal = document.getElementById('date-modal');
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date-value-input').value = today;
+            modal.style.display = 'flex';
+        }
+        
+        function closeDateModal() {
+            const modal = document.getElementById('date-modal');
+            modal.style.display = 'none';
+        }
+        
+        function saveImportantDate() {
+            const labelInput = document.getElementById('date-label-input');
+            const dateInput = document.getElementById('date-value-input');
+            
+            const label = labelInput.value.trim();
+            const date = dateInput.value;
+            
+            if (!label) {
+                alert('Please enter a label');
+                return;
+            }
+            
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+            
+            const importantDates = JSON.parse(localStorage.getItem('importantDates'));
+            importantDates.push({
+                label,
+                date
+            });
+            
+            localStorage.setItem('importantDates', JSON.stringify(importantDates));
+            
+            labelInput.value = '';
+            dateInput.value = '';
+            
+            updateImportantDatesList(importantDates);
+            updateUpcomingEvents(importantDates);
+            closeDateModal();
+        }
+        
+        function updateImportantDatesList(dates) {
+            const datesList = document.getElementById('important-dates-list');
+            datesList.innerHTML = '';
+            
+            // Sort dates by most recent first
+            dates.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (dates.length === 0) {
+                datesList.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">No important dates added yet</p>';
+                return;
+            }
+            
+            dates.forEach((item, index) => {
+                const dateItem = document.createElement('li');
+                dateItem.className = 'date-item';
+                
+                const dateObject = new Date(item.date);
+                const formattedDate = dateObject.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                
+                dateItem.innerHTML = `
+                    <div class="date-info">
+                        <div class="date-label">${item.label}</div>
+                        <div class="days-ago">${daysAgo(item.date)}</div>
+                    </div>
+                    <div class="date-value">${formattedDate}</div>
+                `;
+                
+                datesList.appendChild(dateItem);
+            });
+        }
+        
+        function updateUpcomingEvents(dates) {
+            const upcomingEvents = document.getElementById('upcoming-events');
+            upcomingEvents.innerHTML = '';
+            
+            // Filter dates that are in the future
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const futureDates = dates.filter(item => {
+                const itemDate = new Date(item.date);
+                itemDate.setHours(0, 0, 0, 0);
+                return itemDate >= today;
+            });
+            
+            // Sort by date (ascending)
+            futureDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            if (futureDates.length === 0) {
+                upcomingEvents.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">No upcoming events</p>';
+                return;
+            }
+            
+            // Show only the next 5 events
+            const nextEvents = futureDates.slice(0, 5);
+            
+            nextEvents.forEach(item => {
+                const eventItem = document.createElement('div');
+                eventItem.className = 'date-item';
+                
+                const dateObject = new Date(item.date);
+                const formattedDate = dateObject.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                
+                eventItem.innerHTML = `
+                    <div class="date-info">
+                        <div class="date-label">${item.label}</div>
+                        <div class="date-value">${formattedDate}</div>
+                    </div>
+                    <div class="days-ago">${daysUntil(item.date)}</div>
+                `;
+                
+                upcomingEvents.appendChild(eventItem);
+            });
+        }
+        
+        // Chart Functions
+        function initializeCharts() {
+            // Weekly Summary Chart
+            const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+            const weeklyChart = new Chart(weeklyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    datasets: [
+                        {
+                            label: 'Prayers',
+                            data: [3, 5, 4, 5, 5, 4, 5],
+                            backgroundColor: 'rgba(67, 97, 238, 0.7)',
+                            borderColor: 'rgba(67, 97, 238, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Clean Days',
+                            data: [1, 0, 0, 1, 0, 1, 0],
+                            backgroundColor: 'rgba(76, 201, 240, 0.7)',
+                            borderColor: 'rgba(76, 201, 240, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Workouts',
+                            data: [0, 1, 1, 0, 1, 0, 1],
+                            backgroundColor: 'rgba(243, 114, 44, 0.7)',
+                            borderColor: 'rgba(243, 114, 44, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+            
+            // Prayer Chart
+            const prayerCtx = document.getElementById('prayerChart').getContext('2d');
+            const prayerChart = new Chart(prayerCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'],
+                    datasets: [{
+                        data: [20, 18, 15, 19, 17],
+                        backgroundColor: [
+                            'rgba(67, 97, 238, 0.7)',
+                            'rgba(76, 201, 240, 0.7)',
+                            'rgba(63, 55, 201, 0.7)',
+                            'rgba(114, 44, 243, 0.7)',
+                            'rgba(243, 114, 44, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(76, 201, 240, 1)',
+                            'rgba(63, 55, 201, 1)',
+                            'rgba(114, 44, 243, 1)',
+                            'rgba(243, 114, 44, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Clean Days Chart
+            const cleanCtx = document.getElementById('cleanChart').getContext('2d');
+            const cleanChart = new Chart(cleanCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Clean Days',
+                        data: [25, 20, 22, 18, 15, 20, 23],
+                        fill: false,
+                        backgroundColor: 'rgba(76, 201, 240, 0.7)',
+                        borderColor: 'rgba(76, 201, 240, 1)',
+                        tension: 0.1,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Expense Chart
+            const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+            const expenseChart = new Chart(expenseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Monthly Expenses',
+                        data: [450, 380, 420, 500, 480, 550, 600],
+                        backgroundColor: 'rgba(67, 97, 238, 0.7)',
+                        borderColor: 'rgba(67, 97, 238, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Workout Chart
+            const workoutCtx = document.getElementById('workoutChart').getContext('2d');
+            const workoutChart = new Chart(workoutCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Workout Frequency',
+                        data: [1, 1, 0, 1, 0, 1, 0],
+                        backgroundColor: 'rgba(243, 114, 44, 0.2)',
+                        borderColor: 'rgba(243, 114, 44, 1)',
+                        pointBackgroundColor: 'rgba(243, 114, 44, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(243, 114, 44, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 1
+                        }
+                    }
+                }
+            });
+            
+            // Monthly Prayer Chart
+            const monthlyPrayerCtx = document.getElementById('monthlyPrayerChart').getContext('2d');
+            const monthlyPrayerChart = new Chart(monthlyPrayerCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [
+                        {
+                            label: 'Fajr',
+                            data: [25, 20, 22, 18, 15, 20, 23],
+                            borderColor: 'rgba(67, 97, 238, 1)',
+                            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'Dhuhr',
+                            data: [28, 25, 27, 26, 24, 28, 30],
+                            borderColor: 'rgba(76, 201, 240, 1)',
+                            backgroundColor: 'rgba(76, 201, 240, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'Asr',
+                            data: [20, 18, 19, 17, 16, 20, 22],
+                            borderColor: 'rgba(63, 55, 201, 1)',
+                            backgroundColor: 'rgba(63, 55, 201, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'Maghrib',
+                            data: [30, 28, 29, 27, 26, 30, 31],
+                            borderColor: 'rgba(114, 44, 243, 1)',
+                            backgroundColor: 'rgba(114, 44, 243, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'Isha',
+                            data: [27, 25, 26, 24, 23, 27, 28],
+                            borderColor: 'rgba(243, 114, 44, 1)',
+                            backgroundColor: 'rgba(243, 114, 44, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 31
+                        }
+                    }
+                }
+            });
+            
+            // Expense Category Chart
+            const expenseCategoryCtx = document.getElementById('expenseCategoryChart').getContext('2d');
+            const expenseCategoryChart = new Chart(expenseCategoryCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Health', 'Education', 'Other'],
+                    datasets: [{
+                        data: [30, 15, 10, 20, 15, 5, 3, 2],
+                        backgroundColor: [
+                            'rgba(67, 97, 238, 0.7)',
+                            'rgba(76, 201, 240, 0.7)',
+                            'rgba(63, 55, 201, 0.7)',
+                            'rgba(114, 44, 243, 0.7)',
+                            'rgba(243, 114, 44, 0.7)',
+                            'rgba(44, 243, 114, 0.7)',
+                            'rgba(243, 44, 114, 0.7)',
+                            'rgba(114, 243, 44, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(76, 201, 240, 1)',
+                            'rgba(63, 55, 201, 1)',
+                            'rgba(114, 44, 243, 1)',
+                            'rgba(243, 114, 44, 1)',
+                            'rgba(44, 243, 114, 1)',
+                            'rgba(243, 44, 114, 1)',
+                            'rgba(114, 243, 44, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+            
+            // Workout Frequency Chart
+            const workoutFrequencyCtx = document.getElementById('workoutFrequencyChart').getContext('2d');
+            const workoutFrequencyChart = new Chart(workoutFrequencyCtx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                    datasets: [{
+                        data: [12, 10, 2, 8, 6, 9, 4],
+                        backgroundColor: [
+                            'rgba(67, 97, 238, 0.7)',
+                            'rgba(76, 201, 240, 0.7)',
+                            'rgba(63, 55, 201, 0.7)',
+                            'rgba(114, 44, 243, 0.7)',
+                            'rgba(243, 114, 44, 0.7)',
+                            'rgba(44, 243, 114, 0.7)',
+                            'rgba(243, 44, 114, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(76, 201, 240, 1)',
+                            'rgba(63, 55, 201, 1)',
+                            'rgba(114, 44, 243, 1)',
+                            'rgba(243, 114, 44, 1)',
+                            'rgba(44, 243, 114, 1)',
+                            'rgba(243, 44, 114, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            pointLabels: {
+                                display: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Navigation Functions
+        function setupNavigation() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const sections = document.querySelectorAll('.dashboard-section');
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all menu items and sections
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    sections.forEach(s => s.classList.remove('active'));
+                    
+                    // Add active class to clicked menu item
+                    this.classList.add('active');
+                    
+                    // Show corresponding section
+                    const sectionId = this.getAttribute('data-section') + '-section';
+                    document.getElementById(sectionId).classList.add('active');
+                    
+                    // Update page title
+                    document.getElementById('page-title').textContent = this.querySelector('span').textContent;
+                    
+                    // Close sidebar on mobile
+                    if (window.innerWidth <= 992) {
+                        document.getElementById('sidebar').classList.remove('active');
+                    }
+                });
+            });
+            
+            // Mobile menu toggle
+            document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('active');
+            });
+            
+            // Close modal when clicking outside
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize local storage
+            initializeStorage();
+            
+            // Update the current date display
+            updateDateDisplay();
+            
+            // Load data from local storage
+            loadPrayerStatus();
+            loadCleanCounter();
+            loadExpenses();
+            loadWorkoutRoutines();
+            loadImportantDates();
+            
+            // Initialize charts
+            initializeCharts();
+            
+            // Setup navigation
+            setupNavigation();
+            
+            // Prayer Checkboxes Event Listeners
+            const prayerCheckboxes = document.querySelectorAll('.prayer-checkbox');
+            prayerCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const prayerName = this.id.split('-')[1];
+                    savePrayerStatus(prayerName, this.checked);
+                });
+            });
+            
+            // Clean Counter Event Listeners
+            document.getElementById('increment-clean').addEventListener('click', incrementCleanCounter);
+            document.getElementById('reset-clean').addEventListener('click', resetCleanCounter);
+            
+            // Expense Form Event Listener
+            document.getElementById('add-expense').addEventListener('click', addExpense);
+            document.getElementById('reset-expenses-monthly').addEventListener('click', resetExpensesMonthly);
+            
+            // Workout Event Listeners
+            document.getElementById('workout-yes').addEventListener('click', function() {
+                recordWorkout(true);
+            });
+            
+            document.getElementById('workout-no').addEventListener('click', function() {
+                recordWorkout(false);
+            });
+            
+            // Workout Modal Event Listeners
+            document.getElementById('close-workout-modal').addEventListener('click', closeWorkoutModal);
+            document.getElementById('cancel-workout').addEventListener('click', closeWorkoutModal);
+            document.getElementById('save-workout').addEventListener('click', saveWorkout);
+            
+            // Date Modal Event Listeners
+            document.getElementById('add-date-btn').addEventListener('click', showAddDateModal);
+            document.getElementById('close-date-modal').addEventListener('click', closeDateModal);
+            document.getElementById('cancel-date').addEventListener('click', closeDateModal);
+            document.getElementById('save-date').addEventListener('click', saveImportantDate);
+            
+            // History Modal Event Listeners
+            document.getElementById('view-prayer-history').addEventListener('click', showPrayerHistory);
+            document.getElementById('view-clean-history').addEventListener('click', showCleanHistory);
+            document.getElementById('view-expense-history').addEventListener('click', showExpenseHistory);
+            document.getElementById('close-history').addEventListener('click', function() {
+                document.getElementById('history-modal').style.display = 'none';
+            });
+            document.getElementById('close-history-modal').addEventListener('click', function() {
+                document.getElementById('history-modal').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
